@@ -63,9 +63,9 @@ void print_number(vector<unsigned char>& img, int x, int y){
     vector<char> br = {' ', '.', '0', '#'};
     for(int i=0; i<x; i++){
         for(int j=0; j<y; j++){
-            if(img[x * i + j] + 127 < 128) cout << '.';
-            else if(img[x * i + j] + 127 < 168) cout << '+';
-            else if(img[x * i + j] + 127 < 200) cout << 'o';
+            if(img[x * i + j] < 64) cout << ' ';
+            else if(img[x * i + j] < 128) cout << '.';
+            else if(img[x * i + j] < 192) cout << 'o';
             else cout << '#';
         }
         cout << "\n";
