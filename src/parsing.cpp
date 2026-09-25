@@ -4,83 +4,75 @@
 #include <iostream>
 using namespace std;
 
-struct data_elem{
-    unsigned char label;
-    unsigned int x, y;
-    vector<unsigned char> img;
+#include "../include/parsing.hpp"
 
-    data_elem(unsigned int x, unsigned int y) : x(x), y(y) {
-        img.resize(x * y);
-    }
-};
-
-vector<data_elem> dataset; 
+int rows, cols;
+vector<unsigned char> lbls; 
+vector<vector<unsigned char>> imgs;
 
 void little_endian_conversion(unsigned int& n){
     n = (n >> 24) | ((n << 8) >> 16) | ((n << 16) >> 8) | (n << 24);
 }
 
 void parse_images(){
-    ifstream ifimg("../data/train-images-idx3-ubyte", ios::binary);
-    int mnumber;
+    ifstream imgs_stream("../data/train-images-idx3-ubyte", ios::binary);
+    int magic_number;
 
-    ifimg.read((char*)&mnumber, sizeof(mnumber));
-    int ndim = mnumber >> 24;
-    vector<unsigned int> dim(ndim);
+    imgs_stream.read((char*)&magic_number, sizeof(magic_number));
+    int nd = magic_number >> 24;
+    vector<unsigned int> dim(nd);
 
-    for(int i=0; i<ndim; i++){
-        ifimg.read((char*)&dim[i], sizeof(unsigned int));
+    for(int i=0; i<nd; i++){
+        imgs_stream.read((char*)&dim[i], sizeof(unsigned int));
         little_endian_conversion(dim[i]);
     }
 
-    dataset.resize(dim[0], {dim[1], dim[2]});
+    rows = dim[1];
+    cols = dim[2];
+    imgs.resize(dim[0], vector<unsigned char>(dim[1] * dim[2]));
     for(int i=0; i<dim[0]; i++){
         for(int j=0; j<dim[1]*dim[2]; j++){
-            ifimg.read((char*)&dataset[i].img[j], sizeof(char));
+            imgs_stream.read((char*)&imgs[i][j], sizeof(char));
         }
     }
 }
 
 void parse_labels(){
-    ifstream ifimg("../data/train-labels-idx1-ubyte", ios::binary);
-    int mnumber;
+    ifstream lbls_stream("../data/train-labels-idx1-ubyte", ios::binary);
+    int magic_number;
 
-    ifimg.read((char*)&mnumber, sizeof(mnumber));
-    int ndim = mnumber >> 24;
-    vector<unsigned int> dim(ndim);
+    lbls_stream.read((char*)&magic_number, sizeof(magic_number));
+    int nd = magic_number >> 24;
+    vector<unsigned int> dim(nd);
 
-    for(int i=0; i<ndim; i++){
-        ifimg.read((char*)&dim[i], sizeof(unsigned int));
+    for(int i=0; i<nd; i++){
+        lbls_stream.read((char*)&dim[i], sizeof(unsigned int));
         little_endian_conversion(dim[i]);
     }
 
+    lbls.resize(dim[0]);
     for(int i=0; i<dim[0]; i++){
-        ifimg.read((char*)&dataset[i].label, sizeof(char));
+        lbls_stream.read((char*)&lbls[i], sizeof(char));
     }
 }
 
-void print_number(vector<unsigned char>& img, int x, int y){
+void print_number(vector<unsigned char>& img, int rows, int cols){
     vector<char> br = {' ', '.', '0', '#'};
-    for(int i=0; i<x; i++){
-        for(int j=0; j<y; j++){
-            if(img[x * i + j] < 64) cout << ' ';
-            else if(img[x * i + j] < 128) cout << '.';
-            else if(img[x * i + j] < 192) cout << 'o';
-            else cout << '#';
+    for(int i=0; i<rows; i++){
+        for(int j=0; j<cols; j++){
+            cout << br[img[rows * i + j] / 64];
         }
         cout << "\n";
     }
 }
 
-int main(){
+// int main(){
 
-    parse_images();
-    parse_labels();
+//     parse_images();
+//     parse_labels();
 
-    int x = dataset[0].x;
-    int y = dataset[0].y;
-    for(int i=0; i<20; i++){
-        cout << int(dataset[i].label) << "\n";
-        print_number(dataset[i].img, dataset[i].x, dataset[i].y);
-    }
-}
+//     for(int i=0; i<20; i++){
+//         cout << int(lbls[i]) << "\n";
+//         print_number(imgs[i], x, y);
+//     }
+// }
